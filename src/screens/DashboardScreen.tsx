@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
-import { Plus, Dog as DogIcon } from 'lucide-react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button, Platform } from 'react-native';
+import { Plus, Dog as DogIcon, Smartphone } from 'lucide-react-native';
+import QRCode from 'react-native-qrcode-svg';
 import { localStorage } from '../services/localStorage';
 import { Dog } from '../types';
 import { useNavigation } from '@react-navigation/native';
@@ -8,12 +9,16 @@ import { useNavigation } from '@react-navigation/native';
 export const DashboardScreen = () => {
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [newDogName, setNewDogName] = useState('');
   const [newDogBreed, setNewDogBreed] = useState('');
   const navigation = useNavigation<any>();
 
   useEffect(() => {
     loadDogs();
+    if (Platform.OS === 'web') {
+      setQrUrl(window.location.href);
+    }
   }, []);
 
   const loadDogs = async () => {
@@ -67,6 +72,27 @@ export const DashboardScreen = () => {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No dogs added yet.</Text>
           </View>
+        }
+        ListFooterComponent={
+          Platform.OS === 'web' && qrUrl ? (
+            <View style={styles.qrContainer}>
+              <View style={styles.qrHeader}>
+                <Smartphone size={20} color="#007AFF" />
+                <Text style={styles.qrTitle}>Open on Mobile</Text>
+              </View>
+              <View style={styles.qrBox}>
+                <QRCode
+                  value={qrUrl}
+                  size={140}
+                  color="#1A1A1A"
+                  backgroundColor="#FFFFFF"
+                />
+              </View>
+              <Text style={styles.qrInstruction}>
+                Scan this QR code with your phone to sync and view your dogs on the go!
+              </Text>
+            </View>
+          ) : null
         }
       />
 
@@ -141,5 +167,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15, 
     marginBottom: 15 
   },
-  modalButtons: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 }
+  modalButtons: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
+  qrContainer: {
+    marginTop: 40,
+    marginBottom: 40,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E1E8ED',
+    alignSelf: 'center',
+    maxWidth: 300,
+  },
+  qrHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    gap: 8,
+  },
+  qrTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1A1A1A',
+  },
+  qrBox: {
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  qrInstruction: {
+    marginTop: 15,
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
 });
